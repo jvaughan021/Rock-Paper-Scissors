@@ -64,7 +64,7 @@
         <h1 class="text-3xl sm:text-4xl font-black tracking-tight text-white drop-shadow-md">
             ROCK <span class="text-indigo-400">PAPER</span> SCISSORS
         </h1>
-        <p class="text-slate-400 text-xs sm:text-sm mt-1">Live 1v1 Battle Arena • First to 2 Wins (Auto 2-0 / Max 3 Rounds)</p>
+        <p class="text-slate-400 text-xs sm:text-sm mt-1">Live 1v1 Battle Arena • First to 2 Wins (Draws Replay Round)</p>
     </header>
 
     <main class="w-full max-w-md my-auto">
@@ -140,7 +140,7 @@
             <div class="flex justify-between items-center bg-slate-950/60 border border-slate-800 rounded-2xl px-4 py-3 mb-5">
                 <div>
                     <span class="text-[10px] text-slate-400 uppercase tracking-wider block font-semibold">Match Status</span>
-                    <span id="round-number-text" class="text-base font-bold text-indigo-400">Round 1 / 3</span>
+                    <span id="round-number-text" class="text-base font-bold text-indigo-400">Round 1</span>
                 </div>
                 <div class="text-right">
                     <span class="text-[10px] text-slate-400 uppercase tracking-wider block font-semibold">Room Code</span>
@@ -469,7 +469,7 @@
                 const battleCode = document.getElementById('battle-room-code');
                 const roundText = document.getElementById('round-number-text');
                 if (battleCode) battleCode.innerText = data.code;
-                if (roundText) roundText.innerText = `Round ${data.round} / 3`;
+                if (roundText) roundText.innerText = `Round ${data.round}`;
 
                 const myRole = isHost ? 'host' : 'guest';
                 const oppRole = isHost ? 'guest' : 'host';
@@ -557,26 +557,21 @@
             if (isHost) {
                 setTimeout(async () => {
                     let newScores = { ...data.scores };
-                    if (roundWinner !== 'draw') {
-                        newScores[roundWinner] += 1;
-                    }
-
                     let nextRound = data.round;
                     let matchWinner = null;
                     let nextStatus = 'playing';
 
+                    if (roundWinner !== 'draw') {
+                        // Point scored! Increment score and move to next round count
+                        newScores[roundWinner] += 1;
+                        nextRound += 1;
+                    } else {
+                        // Draw: Keep scores same, keep same round number, just replay choices
+                    }
+
                     if (newScores.host >= 2 || newScores.guest >= 2) {
                         matchWinner = newScores.host > newScores.guest ? 'host' : 'guest';
                         nextStatus = 'gameover';
-                    } else if (data.round >= 3) {
-                        if (newScores.host !== newScores.guest) {
-                            matchWinner = newScores.host > newScores.guest ? 'host' : 'guest';
-                        } else {
-                            matchWinner = 'host';
-                        }
-                        nextStatus = 'gameover';
-                    } else {
-                        nextRound += 1;
                     }
 
                     try {
