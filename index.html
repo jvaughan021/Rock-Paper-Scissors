@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPS 1v1 Arena - Live Firebase Multiplayer</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Firebase JS SDK v10 (Compat Version for standalone browser usage) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at center, #1e1b4b 0%, #09090b 100%);
+            color: #f8fafc;
+            min-height: 100vh;
+        }
+        .choice-btn {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .choice-btn:hover:not(:disabled) {
+            transform: translateY(-6px) scale(1.05);
+            box-shadow: 0 20px 25px -5px rgba(99, 102, 241, 0.4);
+        }
+        .choice-btn:active:not(:disabled) {
+            transform: translateY(-2px) scale(0.98);
+        }
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 15px rgba(99, 102, 241, 0.5); }
+            50% { box-shadow: 0 0 30px rgba(168, 85, 247, 0.8); }
+        }
+        .glow-effect {
+            animation: pulse-glow 2.5s infinite ease-in-out;
+        }
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-pop {
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen justify-between items-center p-4 sm:p-6 overflow-x-hidden">
+
+    <header class="w-full max-w-xl text-center py-3">
+        <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-semibold uppercase tracking-wider mb-2">
+            <span id="connection-dot" class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span id="connection-status">Connected to Firebase</span>
+        </div>
+        <h1 class="text-3xl sm:text-4xl font-black tracking-tight text-white drop-shadow-md">
+            ROCK <span class="text-indigo-400">PAPER</span> SCISSORS
+        </h1>
+        <p class="text-slate-400 text-xs sm:text-sm mt-1">Live 1v1 Battle Arena • First to 2 Wins</p>
+    </header>
+
+    <main class="w-full max-w-md my-auto">
+
+        <!-- Custom Notification Modal -->
+        <div id="toast-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+            <div class="bg-slate-900 border border-slate-700 rounded-2xl p-6 max-w-sm w-full text-center shadow-2xl animate-pop">
+                <div id="toast-icon" class="text-4xl mb-3">🎮</div>
+                <h3 id="toast-title" class="text-lg font-bold text-white mb-1">Notice</h3>
+                <p id="toast-message" class="text-slate-300 text-sm mb-5">Message goes here.</p>
+                <button onclick="closeToast()" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl transition shadow-lg shadow-indigo-600/30">Got it</button>
+            </div>
+        </div>
+
+        <!-- View 1: Lobby / Create & Join -->
+        <section id="view-lobby" class="bg-slate-900/80 backdrop-blur-md border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl">
+            <div class="text-center mb-6">
+                <h2 class="text-xl font-bold text-white">1v1 Multiplayer</h2>
+                <p class="text-slate-400 text-xs mt-1">Create a room code or join your friend to start.</p>
+            </div>
+
+            <div class="space-y-4">
+                <button onclick="createRoom()" class="w-full py-4 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold rounded-2xl shadow-lg shadow-indigo-600/25 transition flex items-center justify-center gap-2 text-base">
+                    <span>⚡ Create New Room</span>
+                </button>
+
+                <div class="relative flex py-2 items-center">
+                    <div class="flex-grow border-t border-slate-800"></div>
+                    <span class="flex-shrink mx-4 text-slate-500 text-xs uppercase tracking-widest font-semibold">or join friend</span>
+                    <div class="flex-grow border-t border-slate-800"></div>
+                </div>
+
+                <div class="space-y-3">
+                    <input type="text" id="room-code-input" placeholder="Enter Room Code (e.g. A9B2)" maxlength="6" class="w-full bg-slate-950/60 border border-slate-800 focus:border-indigo-500 rounded-2xl px-4 py-3.5 text-center text-white placeholder-slate-600 font-mono text-lg tracking-widest uppercase outline-none transition">
+                    <button onclick="joinRoom()" class="w-full py-3.5 bg-slate-800 hover:bg-slate-700 text-indigo-300 hover:text-white font-bold rounded-2xl border border-slate-700 transition flex items-center justify-center gap-2 text-sm">
+                        <span>🔗 Join Room</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- View 2: Waiting for Opponent -->
+        <section id="view-waiting" class="bg-slate-900/80 backdrop-blur-md border border-slate-800 rounded-3xl p-8 shadow-2xl text-center hidden">
+            <div class="w-16 h-16 bg-indigo-500/10 border border-indigo-500/30 rounded-full flex items-center justify-center mx-auto mb-4 glow-effect">
+                <svg class="w-8 h-8 text-indigo-400 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+            </div>
+            <h2 class="text-xl font-bold text-white mb-2">Waiting for Opponent...</h2>
+            <p class="text-slate-400 text-xs mb-6">Send this code to your friend so they can join!</p>
+            
+            <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 mb-6 flex items-center justify-between">
+                <span id="display-room-code" class="font-mono text-3xl font-black tracking-widest text-indigo-400">----</span>
+                <button onclick="copyRoomCode()" class="px-4 py-2 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 font-semibold rounded-xl text-xs border border-indigo-500/30 transition">Copy Code</button>
+            </div>
+            <button onclick="leaveRoom()" class="text-slate-500 hover:text-slate-300 text-xs font-semibold transition">Cancel / Leave Room</button>
+        </section>
+
+        <!-- View 3: Battle Arena -->
+        <section id="view-arena" class="bg-slate-900/80 backdrop-blur-md border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl hidden">
+            
+            <!-- Scoreboard -->
+            <div class="flex items-center justify-between mb-6 bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4">
+                <div class="text-center flex-1">
+                    <span id="label-p1-name" class="block text-xs font-bold text-indigo-400 uppercase tracking-wider mb-1">You</span>
+                    <span id="score-p1" class="text-3xl font-black text-white">0</span>
+                </div>
+                <div class="px-3 text-center">
+                    <span id="round-indicator" class="px-3 py-1 rounded-full bg-slate-800 text-slate-300 text-xs font-bold tracking-wide border border-slate-700">Round 1</span>
+                </div>
+                <div class="text-center flex-1">
+                    <span id="label-p2-name" class="block text-xs font-bold text-purple-400 uppercase tracking-wider mb-1">Opponent</span>
+                    <span id="score-p2" class="text-3xl font-black text-white">0</span>
+                </div>
+            </div>
+
+            <!-- Arena Status Heading -->
+            <div id="arena-status" class="text-center mb-6">
+                <h3 id="status-title" class="text-lg font-bold text-white">Make Your Choice!</h3>
+                <p id="status-subtitle" class="text-slate-400 text-xs mt-0.5">First to 2 wins takes the match.</p>
+            </div>
+
+            <!-- Play choices reveal cards -->
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="bg-slate-950/50 border border-slate-800 rounded-2xl p-4 text-center">
+                    <span class="text-xs text-slate-500 block mb-2 font-medium">Your Choice</span>
+                    <div id="my-choice-display" class="text-4xl py-3">❓</div>
+                </div>
+                <div class="bg-slate-950/50 border border-slate-800 rounded-2xl p-4 text-center">
+                    <span class="text-xs text-slate-500 block mb-2 font-medium">Opponent Choice</span>
+                    <div id="opponent-choice-display" class="text-4xl py-3">❓</div>
+                </div>
+            </div>
+
+            <!-- Move buttons (Rock, Paper, Scissors) -->
+            <div id="choices-container" class="grid grid-cols-3 gap-3">
+                <button onclick="makeChoice('rock')" class="choice-btn flex flex-col items-center justify-center py-4 bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-indigo-500 rounded-2xl group">
+                    <span class="text-3xl mb-1 group-hover:scale-110 transition">🪨</span>
+                    <span class="text-xs font-bold text-slate-300">Rock</span>
+                </button>
+                <button onclick="makeChoice('paper')" class="choice-btn flex flex-col items-center justify-center py-4 bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-indigo-500 rounded-2xl group">
+                    <span class="text-3xl mb-1 group-hover:scale-110 transition">📄</span>
+                    <span class="text-xs font-bold text-slate-300">Paper</span>
+                </button>
+                <button onclick="makeChoice('scissors')" class="choice-btn flex flex-col items-center justify-center py-4 bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-indigo-500 rounded-2xl group">
+                    <span class="text-3xl mb-1 group-hover:scale-110 transition">✂️</span>
+                    <span class="text-xs font-bold text-slate-300">Scissors</span>
+                </button>
+            </div>
+
+            <!-- Post-Match Actions -->
+            <div id="match-over-actions" class="mt-6 hidden space-y-3">
+                <button onclick="resetMatch()" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-2xl transition shadow-lg shadow-indigo-600/30 text-sm">Play Again</button>
+                <button onclick="leaveRoom()" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-semibold rounded-2xl transition text-xs">Leave Room</button>
+            </div>
+
+        </section>
+
+    </main>
+
+    <footer class="w-full max-w-xl text-center py-4 text-slate-600 text-xs">
+        Powered by Firebase Firestore • Realtime Matchmaking
+    </footer>
+
+    <script>
+        // Exact User Firebase Credentials injected directly
+        const firebaseConfig = {
+            apiKey: "AIzaSyArmG52CUnCWvTJ_0cLDw1o7FEPWdBPfJA",
+            authDomain: "rock-paper-scissors-d7984.firebaseapp.com",
+            projectId: "rock-paper-scissors-d7984",
+            storageBucket: "rock-paper-scissors-d7984.firebasestorage.app",
+            messagingSenderId: "192699510793",
+            appId: "1:192699510793:web:00b4310ccd429582ed48d8",
+            measurementId: "G-4RBPJDE5T8"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Generate unique local ID for the user session (bypasses Firebase Auth configuration requirements)
+        let userId = localStorage.getItem('rps_user_id');
+        if (!userId) {
+            userId = 'user_' + Math.random().toString(36).substring(2, 9);
+            localStorage.setItem('rps_user_id', userId);
+        }
+
+        let currentRoomId = null;
+        let playerRole = null; // 'p1' or 'p2'
+        let unsubscribeRoom = null;
+
+        // UI View Switcher
+        function switchView(viewName) {
+            document.getElementById('view-lobby').classList.add('hidden');
+            document.getElementById('view-waiting').classList.add('hidden');
+            document.getElementById('view-arena').classList.add('hidden');
+
+            if (viewName === 'lobby') document.getElementById('view-lobby').classList.remove('hidden');
+            if (viewName === 'waiting') document.getElementById('view-waiting').classList.remove('hidden');
+            if (viewName === 'arena') document.getElementById('view-arena').classList.remove('hidden');
+        }
+
+        function showToast(title, message, icon = '🎮') {
+            document.getElementById('toast-title').innerText = title;
+            document.getElementById('toast-message').innerText = message;
+            document.getElementById('toast-icon').innerText = icon;
+            document.getElementById('toast-modal').classList.remove('hidden');
+        }
+
+        function closeToast() {
+            document.getElementById('toast-modal').classList.add('hidden');
+        }
+
+        // Helper: Room Code Generator
+        function generateRoomCode() {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+            let code = '';
+            for (let i = 0; i < 4; i++) {
+                code += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return code;
+        }
+
+        // Create Room Function
+        async function createRoom() {
+            const roomCode = generateRoomCode();
+            currentRoomId = roomCode;
+            playerRole = 'p1';
+
+            const roomData = {
+                roomId: roomCode,
+                p1: userId,
+                p2: null,
+                status: 'waiting', // 'waiting', 'playing', 'round_over', 'match_over'
+                round: 1,
+                scoreP1: 0,
+                scoreP2: 0,
+                p1Choice: null,
+                p2Choice: null,
+                roundWinner: null,
+                matchWinner: null,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            try {
+                await db.collection('rooms').doc(roomCode).set(roomData);
+                document.getElementById('display-room-code').innerText = roomCode;
+                switchView('waiting');
+                listenToRoom(roomCode);
+            } catch (err) {
+                console.error("Error creating room:", err);
+                showToast("Error", "Could not create room in Firestore. Please check database permissions.", "❌");
+            }
+        }
+
+        // Join Room Function
+        async function joinRoom() {
+            const codeInput = document.getElementById('room-code-input').value.trim().toUpperCase();
+            if (codeInput.length < 4) {
+                showToast("Invalid Code", "Please enter a valid 4-character room code.", "⚠️");
+                return;
+            }
+
+            const roomRef = db.collection('rooms').doc(codeInput);
+            try {
+                const roomSnap = await roomRef.get();
+                if (!roomSnap.exists) {
+                    showToast("Room Not Found", "No active room found with this code.", "❌");
+                    return;
+                }
+
+                const data = roomSnap.data();
+                if (data.p2 && data.p2 !== userId) {
+                    showToast("Room Full", "This room already has 2 players.", "🚫");
+                    return;
+                }
+
+                currentRoomId = codeInput;
+                playerRole = 'p2';
+
+                // Join room as Player 2 and kick off match
+                await roomRef.update({
+                    p2: userId,
+                    status: 'playing',
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                switchView('arena');
+                listenToRoom(codeInput);
+            } catch (err) {
+                console.error("Error joining room:", err);
+                showToast("Error", "Could not join room. Check code and try again.", "❌");
+            }
+        }
+
+        function copyRoomCode() {
+            const code = document.getElementById('display-room-code').innerText;
+            const textArea = document.createElement("textarea");
+            textArea.value = code;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showToast("Copied!", "Room code copied to clipboard.", "📋");
+            } catch (err) {
+                showToast("Code", "Room Code: " + code, "📋");
+            }
+            document.body.removeChild(textArea);
+        }
+
+        async function leaveRoom() {
+            if (unsubscribeRoom) {
+                unsubscribeRoom();
+                unsubscribeRoom = null;
+            }
+            if (currentRoomId && playerRole === 'p1') {
+                try {
+                    await db.collection('rooms').doc(currentRoomId).delete();
+                } catch(e) {}
+            }
+            currentRoomId = null;
+            playerRole = null;
+            document.getElementById('room-code-input').value = '';
+            switchView('lobby');
+        }
+
+        // Live Realtime Firestore Listener
+        function listenToRoom(roomCode) {
+            const roomRef = db.collection('rooms').doc(roomCode);
+            
+            unsubscribeRoom = roomRef.onSnapshot((docSnap) => {
+                if (!docSnap.exists) {
+                    showToast("Room Closed", "The host closed the room.", "🚪");
+                    leaveRoom();
+                    return;
+                }
+
+                const data = docSnap.data();
+                updateGameUI(data);
+            }, (error) => {
+                console.error("Snapshot error:", error);
+            });
+        }
+
+        // UI Renderer & Game Rules Logic
+        function updateGameUI(data) {
+            if (data.status === 'waiting') {
+                switchView('waiting');
+                document.getElementById('display-room-code').innerText = data.roomId;
+                return;
+            }
+
+            switchView('arena');
+
+            // Set dynamic player labels and scores
+            document.getElementById('label-p1-name').innerText = playerRole === 'p1' ? 'You (P1)' : 'Opponent (P1)';
+            document.getElementById('label-p2-name').innerText = playerRole === 'p2' ? 'You (P2)' : 'Opponent (P2)';
+            
+            const myScore = playerRole === 'p1' ? data.scoreP1 : data.scoreP2;
+            const oppScore = playerRole === 'p1' ? data.scoreP2 : data.scoreP1;
+            
+            document.getElementById('score-p1').innerText = myScore;
+            document.getElementById('score-p2').innerText = oppScore;
+            document.getElementById('round-indicator').innerText = `Round ${data.round}`;
+
+            const myChoice = playerRole === 'p1' ? data.p1Choice : data.p2Choice;
+            const oppChoice = playerRole === 'p1' ? data.p2Choice : data.p1Choice;
+
+            // Update local choice presentation
+            const myDisplay = document.getElementById('my-choice-display');
+            myDisplay.innerText = myChoice ? getEmoji(myChoice) : '❓';
+
+            // Opponent display (Hidden till round is evaluated)
+            const oppDisplay = document.getElementById('opponent-choice-display');
+            if (data.status === 'round_over' || data.status === 'match_over') {
+                oppDisplay.innerText = oppChoice ? getEmoji(oppChoice) : '❌';
+            } else {
+                oppDisplay.innerText = oppChoice ? '🔒' : '❓';
+            }
+
+            const titleEl = document.getElementById('status-title');
+            const subEl = document.getElementById('status-subtitle');
+            const choicesContainer = document.getElementById('choices-container');
+            const matchActions = document.getElementById('match-over-actions');
+
+            if (data.status === 'playing') {
+                matchActions.classList.add('hidden');
+                choicesContainer.style.pointerEvents = 'auto';
+                choicesContainer.style.opacity = '1';
+
+                if (myChoice) {
+                    titleEl.innerText = "Locked In!";
+                    subEl.innerText = "Waiting for opponent to pick...";
+                } else {
+                    titleEl.innerText = "Make Your Move!";
+                    subEl.innerText = `Round ${data.round} • First to 2 wins takes match!`;
+                }
+            } else if (data.status === 'round_over') {
+                choicesContainer.style.pointerEvents = 'none';
+                choicesContainer.style.opacity = '0.5';
+
+                if (data.roundWinner === 'tie') {
+                    titleEl.innerText = "🤝 It's a Tie!";
+                } else if (data.roundWinner === playerRole) {
+                    titleEl.innerText = "🎉 You Won This Round!";
+                } else {
+                    titleEl.innerText = "💥 Opponent Won Round!";
+                }
+                subEl.innerText = "Next round starting shortly...";
+
+            } else if (data.status === 'match_over') {
+                choicesContainer.style.pointerEvents = 'none';
+                choicesContainer.style.opacity = '0.3';
+                matchActions.classList.remove('hidden');
+
+                if (data.matchWinner === playerRole) {
+                    titleEl.innerText = "🏆 CHAMPION! You Won!";
+                    subEl.innerText = `Final Score: ${myScore} - ${oppScore}`;
+                } else {
+                    titleEl.innerText = "💀 DEFEAT! Opponent Won!";
+                    subEl.innerText = `Final Score: ${myScore} - ${oppScore}`;
+                }
+            }
+        }
+
+        function getEmoji(choice) {
+            if (choice === 'rock') return '🪨';
+            if (choice === 'paper') return '📄';
+            if (choice === 'scissors') return '✂️';
+            return '❓';
+        }
+
+        // Action when user clicks Rock, Paper, or Scissors
+        async function makeChoice(choice) {
+            if (!currentRoomId || !playerRole) return;
+            
+            const roomRef = db.collection('rooms').doc(currentRoomId);
+            try {
+                const roomSnap = await roomRef.get();
+                if (!roomSnap.exists) return;
+                const data = roomSnap.data();
+
+                if (data.status !== 'playing') return;
+                
+                const myField = playerRole === 'p1' ? 'p1Choice' : 'p2Choice';
+                const oppField = playerRole === 'p1' ? 'p2Choice' : 'p1Choice';
+
+                const updates = { [myField]: choice };
+                
+                const oppChoice = data[oppField];
+                if (oppChoice) {
+                    // Both players have selected! Evaluate winner
+                    const p1Choice = playerRole === 'p1' ? choice : oppChoice;
+                    const p2Choice = playerRole === 'p1' ? oppChoice : choice;
+
+                    const winner = calculateRoundWinner(p1Choice, p2Choice);
+                    let sP1 = data.scoreP1;
+                    let sP2 = data.scoreP2;
+
+                    if (winner === 'p1') sP1++;
+                    if (winner === 'p2') sP2++;
+
+                    updates.scoreP1 = sP1;
+                    updates.scoreP2 = sP2;
+                    updates.roundWinner = winner;
+
+                    // Match Winner Rules: First to 2 wins takes match (e.g. 2-0 or 2-1)
+                    if (sP1 >= 2 || sP2 >= 2) {
+                        updates.status = 'match_over';
+                        updates.matchWinner = sP1 > sP2 ? 'p1' : 'p2';
+                    } else {
+                        // Advance round
+                        updates.status = 'round_over';
+                        setTimeout(() => advanceRound(roomRef, data.round + 1), 2500);
+                    }
+                }
+
+                await roomRef.update(updates);
+            } catch (err) {
+                console.error("Error committing choice:", err);
+            }
+        }
+
+        function calculateRoundWinner(c1, c2) {
+            if (c1 === c2) return 'tie';
+            if (
+                (c1 === 'rock' && c2 === 'scissors') ||
+                (c1 === 'paper' && c2 === 'rock') ||
+                (c1 === 'scissors' && c2 === 'paper')
+            ) {
+                return 'p1';
+            }
+            return 'p2';
+        }
+
+        async function advanceRound(roomRef, nextRound) {
+            try {
+                await roomRef.update({
+                    round: nextRound,
+                    p1Choice: null,
+                    p2Choice: null,
+                    roundWinner: null,
+                    status: 'playing'
+                });
+            } catch (e) {}
+        }
+
+        // Restart Match
+        async function resetMatch() {
+            if (!currentRoomId) return;
+            const roomRef = db.collection('rooms').doc(currentRoomId);
+            try {
+                await roomRef.update({
+                    status: 'playing',
+                    round: 1,
+                    scoreP1: 0,
+                    scoreP2: 0,
+                    p1Choice: null,
+                    p2Choice: null,
+                    roundWinner: null,
+                    matchWinner: null
+                });
+            } catch (err) {
+                console.error("Error resetting match:", err);
+            }
+        }
+    </script>
+</body>
+</html>
