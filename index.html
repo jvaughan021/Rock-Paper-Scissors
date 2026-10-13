@@ -64,7 +64,9 @@
         <h1 class="text-3xl sm:text-4xl font-black tracking-tight text-white drop-shadow-md">
             ROCK <span class="text-indigo-400">PAPER</span> SCISSORS
         </h1>
-        <p class="text-slate-400 text-xs sm:text-sm mt-1">Live 1v1 Battle Arena • First to 2 Wins (Draws Replay Round)</p>
+        <p class="text-slate-400 text-xs sm:text-sm mt-1">
+            Live 1v1 Battle Arena • First to 2 Wins • Created by Jack Vaughan
+        </p>
     </header>
 
     <main class="w-full max-w-md my-auto">
@@ -562,11 +564,8 @@
                     let nextStatus = 'playing';
 
                     if (roundWinner !== 'draw') {
-                        // Point scored! Increment score and move to next round count
                         newScores[roundWinner] += 1;
                         nextRound += 1;
-                    } else {
-                        // Draw: Keep scores same, keep same round number, just replay choices
                     }
 
                     if (newScores.host >= 2 || newScores.guest >= 2) {
