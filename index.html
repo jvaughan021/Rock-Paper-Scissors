@@ -380,7 +380,7 @@
                 const btn = document.getElementById(id);
                 if (btn) {
                     btn.classList.remove('selected-choice');
-                    btn.blur(); // Remove browser element focus highlight on mobile/touch screens
+                    btn.blur();
                 }
             });
         }
@@ -390,7 +390,6 @@
             const roomRef = db.collection('rooms').doc(currentRoomCode);
             const role = isHost ? 'host' : 'guest';
 
-            // Visually highlight selection locally immediately
             clearChoiceHighlights();
             const selectedBtn = document.getElementById(`btn-${choice}`);
             if (selectedBtn) {
@@ -418,7 +417,6 @@
             }
         }
 
-        // Evaluate round outcome & check series winners
         async function evaluateRoundAndProgression(data) {
             if (!isHost) return;
             if (data.status !== 'playing') return;
@@ -524,14 +522,12 @@
                     myDisplay.innerText = EMOJIS[myChoice];
                     myDisplay.classList.add('border-indigo-500', 'bg-indigo-950/50');
                     
-                    // Highlight selected button
-                    clearChoiceHighlights();
                     const btn = document.getElementById(`btn-${myChoice}`);
                     if (btn) btn.classList.add('selected-choice');
                 } else {
                     myDisplay.innerText = '❓';
                     myDisplay.classList.remove('border-indigo-500', 'bg-indigo-950/50');
-                    clearChoiceHighlights(); // Clear highlights when choices reset for next round
+                    clearChoiceHighlights();
                 }
 
                 if (data.choices.host && data.choices.guest) {
