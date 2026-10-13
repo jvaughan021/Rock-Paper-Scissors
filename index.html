@@ -33,7 +33,6 @@
         .choice-btn:focus {
             outline: none;
         }
-        /* Style for actively selected choice during waiting phase */
         .choice-btn.selected-choice {
             border-color: #6366f1 !important;
             background-color: rgba(99, 102, 241, 0.25) !important;
@@ -70,15 +69,17 @@
 
     <main class="w-full max-w-md my-auto">
 
+        <!-- Toast Modal -->
         <div id="toast-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
             <div class="bg-slate-900 border border-slate-700 rounded-2xl p-6 max-w-sm w-full text-center shadow-2xl animate-pop">
                 <div id="toast-icon" class="text-4xl mb-3">🎮</div>
                 <h3 id="toast-title" class="text-lg font-bold text-white mb-1">Notice</h3>
                 <p id="toast-message" class="text-slate-300 text-sm mb-5">Message goes here.</p>
-                <button onclick="closeToast()" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl transition shadow-lg shadow-indigo-600/30">Got it</button>
+                <button onclick="window.closeToast()" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl transition shadow-lg shadow-indigo-600/30">Got it</button>
             </div>
         </div>
 
+        <!-- Lobby View -->
         <section id="view-lobby" class="bg-slate-900/80 backdrop-blur-md border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl">
             <div class="text-center mb-6">
                 <h2 class="text-xl font-bold text-white">Play with Your Friend</h2>
@@ -97,7 +98,7 @@
             </div>
 
             <div class="space-y-4">
-                <button onclick="createRoom()" class="w-full py-4 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold rounded-2xl shadow-lg shadow-indigo-600/25 transition flex items-center justify-center gap-2 text-base">
+                <button onclick="window.createRoom()" class="w-full py-4 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold rounded-2xl shadow-lg shadow-indigo-600/25 transition flex items-center justify-center gap-2 text-base">
                     <span>⚡ Create New Room</span>
                 </button>
 
@@ -109,13 +110,14 @@
 
                 <div class="space-y-3">
                     <input type="text" id="room-code-input" placeholder="Enter Room Code (e.g. A9B2)" maxlength="4" class="w-full bg-slate-950/60 border border-slate-800 focus:border-indigo-500 rounded-2xl px-4 py-3.5 text-center text-white placeholder-slate-600 font-mono text-lg tracking-widest uppercase outline-none transition">
-                    <button onclick="joinRoom()" class="w-full py-3.5 bg-slate-800 hover:bg-slate-700 text-indigo-300 hover:text-white font-bold rounded-2xl border border-slate-700 transition flex items-center justify-center gap-2 text-sm">
+                    <button onclick="window.joinRoom()" class="w-full py-3.5 bg-slate-800 hover:bg-slate-700 text-indigo-300 hover:text-white font-bold rounded-2xl border border-slate-700 transition flex items-center justify-center gap-2 text-sm">
                         <span>🔗 Join Room</span>
                     </button>
                 </div>
             </div>
         </section>
 
+        <!-- Waiting View -->
         <section id="view-waiting" class="bg-slate-900/80 backdrop-blur-md border border-slate-800 rounded-3xl p-8 shadow-2xl text-center hidden">
             <div class="w-16 h-16 bg-indigo-500/10 border border-indigo-500/30 rounded-2xl flex items-center justify-center mx-auto mb-4 glow-effect">
                 <span class="text-2xl animate-spin">⏳</span>
@@ -125,12 +127,13 @@
             
             <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 mb-6 flex items-center justify-between">
                 <span id="display-room-code" class="text-3xl font-mono font-black tracking-widest text-indigo-400">----</span>
-                <button onclick="copyRoomCode()" class="px-4 py-2 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 text-xs font-semibold rounded-xl border border-indigo-500/30 transition">Copy Code</button>
+                <button onclick="window.copyRoomCode()" class="px-4 py-2 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 text-xs font-semibold rounded-xl border border-indigo-500/30 transition">Copy Code</button>
             </div>
 
-            <button onclick="leaveRoom()" class="text-xs text-slate-500 hover:text-slate-400 underline transition">Cancel & Exit Room</button>
+            <button onclick="window.leaveRoom()" class="text-xs text-slate-500 hover:text-slate-400 underline transition">Cancel & Exit Room</button>
         </section>
 
+        <!-- Battle Arena View -->
         <section id="view-battle" class="bg-slate-900/80 backdrop-blur-md border border-slate-800 rounded-3xl p-6 shadow-2xl hidden">
             
             <!-- Top Status Bar -->
@@ -157,7 +160,7 @@
                 </div>
             </div>
 
-            <!-- Arena Table (Choices display area) -->
+            <!-- Arena Table -->
             <div class="bg-slate-950/80 border border-slate-800 rounded-2xl p-6 text-center mb-6 relative overflow-hidden">
                 <div id="status-banner" class="text-sm font-bold text-indigo-300 mb-4 animate-pulse">
                     Make your choice below!
@@ -184,27 +187,32 @@
 
             <!-- Choice Action Buttons -->
             <div id="choices-container" class="grid grid-cols-3 gap-3">
-                <button id="btn-rock" onclick="makeChoice('rock')" class="choice-btn flex flex-col items-center justify-center py-4 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-2xl shadow-lg">
+                <button id="btn-rock" onclick="window.makeChoice('rock')" class="choice-btn flex flex-col items-center justify-center py-4 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-2xl shadow-lg">
                     <span class="text-3xl mb-1 pointer-events-none">🪨</span>
                     <span class="text-xs font-bold text-slate-300 pointer-events-none">Rock</span>
                 </button>
-                <button id="btn-paper" onclick="makeChoice('paper')" class="choice-btn flex flex-col items-center justify-center py-4 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-2xl shadow-lg">
+                <button id="btn-paper" onclick="window.makeChoice('paper')" class="choice-btn flex flex-col items-center justify-center py-4 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-2xl shadow-lg">
                     <span class="text-3xl mb-1 pointer-events-none">📄</span>
                     <span class="text-xs font-bold text-slate-300 pointer-events-none">Paper</span>
                 </button>
-                <button id="btn-scissors" onclick="makeChoice('scissors')" class="choice-btn flex flex-col items-center justify-center py-4 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-2xl shadow-lg">
+                <button id="btn-scissors" onclick="window.makeChoice('scissors')" class="choice-btn flex flex-col items-center justify-center py-4 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-2xl shadow-lg">
                     <span class="text-3xl mb-1 pointer-events-none">✂️</span>
                     <span class="text-xs font-bold text-slate-300 pointer-events-none">Scissors</span>
                 </button>
             </div>
+            
+            <div class="mt-5 text-center">
+                <button onclick="window.leaveRoom()" class="text-xs text-slate-500 hover:text-slate-400 underline transition">Leave Room / Surrender</button>
+            </div>
         </section>
 
+        <!-- Game Over View -->
         <section id="view-gameover" class="bg-slate-900/80 backdrop-blur-md border border-slate-800 rounded-3xl p-8 shadow-2xl text-center hidden">
             <div id="winner-trophy" class="text-6xl mb-3 animate-bounce">🏆</div>
             <h2 id="winner-title" class="text-2xl font-black text-white mb-2">Victory!</h2>
             <p id="winner-subtitle" class="text-slate-400 text-xs mb-6">You won the 1v1 match series.</p>
 
-            <button onclick="resetToLobby()" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-2xl shadow-lg shadow-indigo-600/35 transition">
+            <button onclick="window.resetToLobby()" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-2xl shadow-lg shadow-indigo-600/35 transition">
                 Play Again / New Room
             </button>
         </section>
@@ -212,7 +220,6 @@
     </main>
 
     <script>
-        // Your Firebase Configuration (Embedded Automatically)
         const firebaseConfig = {
             apiKey: "AIzaSyArmG52CUnCWvTJ_0cLDw1o7FEPWdBPfJA",
             authDomain: "rock-paper-scissors-d7984.firebaseapp.com",
@@ -223,11 +230,11 @@
             measurementId: "G-4RBPJDE5T8"
         };
 
-        // Initialize Firebase Compat
-        firebase.initializeApp(firebaseConfig);
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
         const db = firebase.firestore();
 
-        // Local User ID Assignment
         let userId = localStorage.getItem('rps_user_id');
         if (!userId) {
             userId = 'user_' + Math.random().toString(36).substring(2, 9);
@@ -237,7 +244,7 @@
         let currentRoomCode = null;
         let isHost = false;
         let unsubscribeRoom = null;
-        let lastProcessedRound = 0;
+        let hasResolvedRound = false;
 
         const EMOJIS = {
             rock: '🪨',
@@ -287,13 +294,12 @@
             const code = generateRoomCode();
             currentRoomCode = code;
             isHost = true;
-            lastProcessedRound = 1;
 
             const roomData = {
                 code: code,
                 hostId: userId,
                 guestId: null,
-                status: 'waiting', // waiting, playing, gameover, left
+                status: 'waiting',
                 round: 1,
                 scores: { host: 0, guest: 0 },
                 choices: { host: null, guest: null },
@@ -339,7 +345,6 @@
 
                 currentRoomCode = code;
                 isHost = false;
-                lastProcessedRound = data.round || 1;
 
                 await roomRef.update({
                     guestId: userId,
@@ -355,6 +360,19 @@
             }
         }
 
+        function listenToRoom(code) {
+            if (unsubscribeRoom) unsubscribeRoom();
+
+            const roomRef = db.collection('rooms').doc(code);
+            unsubscribeRoom = roomRef.onSnapshot((doc) => {
+                if (!doc.exists) return;
+                const data = doc.data();
+                updateUIState(data);
+            }, (error) => {
+                console.error("Room listener error:", error);
+            });
+        }
+
         async function leaveRoom() {
             if (currentRoomCode) {
                 const myRole = isHost ? 'host' : 'guest';
@@ -362,16 +380,26 @@
                     await db.collection('rooms').doc(currentRoomCode).update({
                         status: 'gameover',
                         matchWinner: isHost ? 'guest' : 'host',
-                        leftBy: myRole,
-                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        leftBy: myRole
                     });
                 } catch (e) {
-                    console.error('Error leaving room:', e);
+                    console.error(e);
                 }
             }
-            if (unsubscribeRoom) unsubscribeRoom();
+            resetToLobby();
+        }
+
+        function resetToLobby() {
+            if (unsubscribeRoom) {
+                unsubscribeRoom();
+                unsubscribeRoom = null;
+            }
             currentRoomCode = null;
             isHost = false;
+            hasResolvedRound = false;
+            const codeInput = document.getElementById('room-code-input');
+            if (codeInput) codeInput.value = '';
+            clearChoiceHighlights();
             switchView('view-lobby');
         }
 
@@ -381,211 +409,199 @@
                 if (btn) {
                     btn.classList.remove('selected-choice');
                     btn.blur();
+                    btn.disabled = false;
                 }
             });
         }
 
         async function makeChoice(choice) {
             if (!currentRoomCode) return;
-            const roomRef = db.collection('rooms').doc(currentRoomCode);
-            const role = isHost ? 'host' : 'guest';
-
+            const myRole = isHost ? 'host' : 'guest';
+            
             clearChoiceHighlights();
-            const selectedBtn = document.getElementById(`btn-${choice}`);
-            if (selectedBtn) {
-                selectedBtn.classList.add('selected-choice');
+            const btnId = 'btn-' + choice;
+            const btn = document.getElementById(btnId);
+            if (btn) {
+                btn.classList.add('selected-choice');
+                btn.blur();
             }
 
+            const banner = document.getElementById('status-banner');
+            if (banner) banner.innerText = "Choice locked in! Waiting for opponent...";
+
             try {
-                await db.runTransaction(async (transaction) => {
-                    const doc = await transaction.get(roomRef);
-                    if (!doc.exists) return;
-                    const data = doc.data();
-                    
-                    if (data.status !== 'playing') return;
-
-                    const choices = { ...data.choices };
-                    choices[role] = choice;
-
-                    transaction.update(roomRef, {
-                        choices: choices,
-                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                });
+                const roomRef = db.collection('rooms').doc(currentRoomCode);
+                const updateObj = {};
+                updateObj[`choices.${myRole}`] = choice;
+                await roomRef.update(updateObj);
             } catch (err) {
                 console.error(err);
             }
         }
 
-        async function evaluateRoundAndProgression(data) {
-            if (!isHost) return;
-            if (data.status !== 'playing') return;
-
-            const hostChoice = data.choices.host;
-            const guestChoice = data.choices.guest;
-
-            if (hostChoice && guestChoice) {
-                let roundWin = 'tie';
-
-                if (hostChoice !== guestChoice) {
-                    if (
-                        (hostChoice === 'rock' && guestChoice === 'scissors') ||
-                        (hostChoice === 'paper' && guestChoice === 'rock') ||
-                        (hostChoice === 'scissors' && guestChoice === 'paper')
-                    ) {
-                        roundWin = 'host';
-                    } else {
-                        roundWin = 'guest';
-                    }
-                }
-
-                const scores = { ...data.scores };
-                if (roundWin === 'host') scores.host += 1;
-                if (roundWin === 'guest') scores.guest += 1;
-
-                let matchWinner = null;
-                let nextStatus = 'playing';
-                let nextRound = data.round;
-
-                if (scores.host >= 2) {
-                    matchWinner = 'host';
-                    nextStatus = 'gameover';
-                } else if (scores.guest >= 2) {
-                    matchWinner = 'guest';
-                    nextStatus = 'gameover';
-                } else {
-                    if (data.round === 2 && scores.host === 1 && scores.guest === 1) {
-                        nextRound = 3;
-                    } else if (data.round === 1) {
-                        nextRound = 2;
-                    } else {
-                        if (scores.host === 2 || scores.guest === 2) {
-                            matchWinner = scores.host === 2 ? 'host' : 'guest';
-                            nextStatus = 'gameover';
-                        } else {
-                            nextRound = data.round + 1;
-                            if (nextRound > 3) {
-                                matchWinner = scores.host > scores.guest ? 'host' : (scores.guest > scores.host ? 'guest' : 'tie');
-                                nextStatus = 'gameover';
-                            }
-                        }
-                    }
-                }
-
-                setTimeout(async () => {
-                    try {
-                        await db.collection('rooms').doc(data.code).update({
-                            scores: scores,
-                            roundWinner: roundWin,
-                            matchWinner: matchWinner,
-                            status: nextStatus,
-                            round: nextRound,
-                            choices: { host: null, guest: null },
-                            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                        });
-                    } catch (e) {
-                        console.error('Error updating round:', e);
-                    }
-                }, 1600);
-            }
-        }
-
         function updateUIState(data) {
+            const battleView = document.getElementById('view-battle');
+            if (!battleView) return;
+
+            if (data.status === 'gameover' && data.leftBy) {
+                const trophy = document.getElementById('winner-trophy');
+                const title = document.getElementById('winner-title');
+                const sub = document.getElementById('winner-subtitle');
+                if (trophy) trophy.innerText = '🚪';
+                if (title) title.innerText = 'Opponent Left';
+                if (sub) sub.innerText = 'Your opponent abandoned the match. You win by default!';
+                switchView('view-gameover');
+                return;
+            }
+
             if (data.status === 'waiting') {
+                const displayCode = document.getElementById('display-room-code');
+                if (displayCode) displayCode.innerText = data.code;
                 switchView('view-waiting');
-                document.getElementById('display-room-code').innerText = data.code;
                 return;
             }
 
             if (data.status === 'playing') {
-                switchView('view-battle');
-                document.getElementById('battle-room-code').innerText = data.code;
+                if (battleView.classList.contains('hidden')) {
+                    switchView('view-battle');
+                }
+
+                const battleCode = document.getElementById('battle-room-code');
+                const roundText = document.getElementById('round-number-text');
+                if (battleCode) battleCode.innerText = data.code;
+                if (roundText) roundText.innerText = `Round ${data.round} / 3`;
 
                 const myRole = isHost ? 'host' : 'guest';
                 const oppRole = isHost ? 'guest' : 'host';
 
-                document.getElementById('p1-label').innerText = isHost ? 'You (Host)' : 'You (Guest)';
-                document.getElementById('p2-label').innerText = isHost ? 'Opponent (Guest)' : 'Opponent (Host)';
+                const p1Label = document.getElementById('p1-label');
+                const p2Label = document.getElementById('p2-label');
+                if (p1Label) p1Label.innerText = isHost ? 'You (Host)' : 'You (Guest)';
+                if (p2Label) p2Label.innerText = isHost ? 'Opponent (Guest)' : 'Opponent (Host)';
 
-                document.getElementById('p1-score').innerText = data.scores[myRole];
-                document.getElementById('p2-score').innerText = data.scores[oppRole];
-                document.getElementById('round-number-text').innerText = `Round ${data.round} / 3`;
+                const p1Score = document.getElementById('p1-score');
+                const p2Score = document.getElementById('p2-score');
+                if (p1Score) p1Score.innerText = data.scores[myRole];
+                if (p2Score) p2Score.innerText = data.scores[oppRole];
 
                 const myChoice = data.choices[myRole];
                 const oppChoice = data.choices[oppRole];
 
                 const myDisplay = document.getElementById('my-choice-display');
                 const oppDisplay = document.getElementById('opponent-choice-display');
-                const banner = document.getElementById('status-banner');
 
                 if (myChoice) {
-                    myDisplay.innerText = EMOJIS[myChoice];
-                    myDisplay.classList.add('border-indigo-500', 'bg-indigo-950/50');
-                    
-                    const btn = document.getElementById(`btn-${myChoice}`);
-                    if (btn) btn.classList.add('selected-choice');
+                    if (myDisplay) myDisplay.innerText = EMOJIS[myChoice];
                 } else {
-                    myDisplay.innerText = '❓';
-                    myDisplay.classList.remove('border-indigo-500', 'bg-indigo-950/50');
+                    if (myDisplay) myDisplay.innerText = '❓';
                     clearChoiceHighlights();
                 }
 
-                if (data.choices.host && data.choices.guest) {
-                    oppDisplay.innerText = EMOJIS[oppChoice];
-                    oppDisplay.classList.add('border-indigo-500', 'bg-indigo-950/50');
-                    banner.innerText = "Revealing choices...";
+                if (oppChoice) {
+                    if (oppDisplay) oppDisplay.innerText = '🔒';
                 } else {
-                    if (myChoice) {
-                        oppDisplay.innerText = '🔒';
-                        oppDisplay.classList.remove('border-indigo-500', 'bg-indigo-950/50');
-                        banner.innerText = "Choice locked! Waiting for opponent...";
-                    } else {
-                        oppDisplay.innerText = '❓';
-                        oppDisplay.classList.remove('border-indigo-500', 'bg-indigo-950/50');
-                        banner.innerText = "Make your choice below!";
-                    }
+                    if (oppDisplay) oppDisplay.innerText = '❓';
                 }
 
-                if (isHost && data.choices.host && data.choices.guest) {
-                    evaluateRoundAndProgression(data);
+                if (myChoice && oppChoice && !hasResolvedRound) {
+                    hasResolvedRound = true;
+                    if (oppDisplay) oppDisplay.innerText = EMOJIS[oppChoice];
+                    resolveRoundLocally(data, myRole, oppRole, myChoice, oppChoice);
+                } else if (!myChoice && !oppChoice) {
+                    hasResolvedRound = false;
+                    const banner = document.getElementById('status-banner');
+                    if (banner) banner.innerText = "Make your choice below!";
                 }
                 return;
             }
 
             if (data.status === 'gameover') {
-                switchView('view-gameover');
                 const myRole = isHost ? 'host' : 'guest';
-                const winner = data.matchWinner;
-
+                const didWin = data.matchWinner === myRole;
+                
                 const trophy = document.getElementById('winner-trophy');
                 const title = document.getElementById('winner-title');
-                const subtitle = document.getElementById('winner-subtitle');
-
-                if (data.leftBy) {
-                    if (data.leftBy === myRole) {
-                        trophy.innerText = '🚪';
-                        title.innerText = 'Match Left';
-                        subtitle.innerText = 'You left the room.';
-                    } else {
-                        trophy.innerText = '🏆';
-                        title.innerText = 'Victory!';
-                        subtitle.innerText = 'Your opponent left the room.';
-                    }
-                } else if (winner === myRole) {
-                    trophy.innerText = '🏆';
-                    title.innerText = 'Victory!';
-                    subtitle.innerText = `You won the 1v1 match series (${data.scores.host} - ${data.scores.guest})!`;
-                } else if (winner === 'tie') {
-                    trophy.innerText = '🤝';
-                    title.innerText = 'Match Tied!';
-                    subtitle.innerText = `The series ended in a tie!`;
-                } else {
-                    trophy.innerText = '💀';
-                    title.innerText = 'Defeat!';
-                    subtitle.innerText = `Your opponent won the series (${data.scores.host} - ${data.scores.guest}).`;
-                }
+                const sub = document.getElementById('winner-subtitle');
+                if (trophy) trophy.innerText = didWin ? '🏆' : '💀';
+                if (title) title.innerText = didWin ? 'Victory!' : 'Defeat';
+                if (sub) sub.innerText = didWin ? 'You won the 1v1 match series!' : 'Your opponent won the match series.';
+                switchView('view-gameover');
             }
         }
+
+        async function resolveRoundLocally(data, myRole, oppRole, myChoice, oppChoice) {
+            let roundWinner = 'draw';
+            if (myChoice === oppChoice) {
+                roundWinner = 'draw';
+            } else if (
+                (myChoice === 'rock' && oppChoice === 'scissors') ||
+                (myChoice === 'paper' && oppChoice === 'rock') ||
+                (myChoice === 'scissors' && oppChoice === 'paper')
+            ) {
+                roundWinner = myRole;
+            } else {
+                roundWinner = oppRole;
+            }
+
+            const banner = document.getElementById('status-banner');
+            if (banner) {
+                if (roundWinner === 'draw') {
+                    banner.innerText = "It's a Draw! Replaying round...";
+                } else if (roundWinner === myRole) {
+                    banner.innerText = "You won this round! 🎉";
+                } else {
+                    banner.innerText = "Opponent won this round! 😢";
+                }
+            }
+
+            if (isHost) {
+                setTimeout(async () => {
+                    let newScores = { ...data.scores };
+                    if (roundWinner !== 'draw') {
+                        newScores[roundWinner] += 1;
+                    }
+
+                    let nextRound = data.round;
+                    let matchWinner = null;
+                    let nextStatus = 'playing';
+
+                    if (newScores.host >= 2 || newScores.guest >= 2) {
+                        matchWinner = newScores.host > newScores.guest ? 'host' : 'guest';
+                        nextStatus = 'gameover';
+                    } else if (data.round >= 3) {
+                        if (newScores.host !== newScores.guest) {
+                            matchWinner = newScores.host > newScores.guest ? 'host' : 'guest';
+                        } else {
+                            matchWinner = 'host';
+                        }
+                        nextStatus = 'gameover';
+                    } else {
+                        nextRound += 1;
+                    }
+
+                    try {
+                        await db.collection('rooms').doc(currentRoomCode).update({
+                            scores: newScores,
+                            round: nextRound,
+                            choices: { host: null, guest: null },
+                            status: nextStatus,
+                            matchWinner: matchWinner,
+                            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                    } catch (e) {
+                        console.error(e);
+                    }
+                }, 2000);
+            }
+        }
+
+        window.createRoom = createRoom;
+        window.joinRoom = joinRoom;
+        window.makeChoice = makeChoice;
+        window.leaveRoom = leaveRoom;
+        window.copyRoomCode = copyRoomCode;
+        window.resetToLobby = resetToLobby;
+        window.closeToast = closeToast;
     </script>
 </body>
 </html>
