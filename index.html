@@ -30,6 +30,15 @@
         .choice-btn:active:not(:disabled) {
             transform: translateY(-2px) scale(0.98);
         }
+        .choice-btn:focus {
+            outline: none;
+        }
+        /* Style for actively selected choice during waiting phase */
+        .choice-btn.selected-choice {
+            border-color: #6366f1 !important;
+            background-color: rgba(99, 102, 241, 0.25) !important;
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.5) !important;
+        }
         @keyframes pulse-glow {
             0%, 100% { box-shadow: 0 0 15px rgba(99, 102, 241, 0.5); }
             50% { box-shadow: 0 0 30px rgba(168, 85, 247, 0.8); }
@@ -175,17 +184,17 @@
 
             <!-- Choice Action Buttons -->
             <div id="choices-container" class="grid grid-cols-3 gap-3">
-                <button onclick="makeChoice('rock')" class="choice-btn flex flex-col items-center justify-center py-4 bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-indigo-500 rounded-2xl shadow-lg">
-                    <span class="text-3xl mb-1">🪨</span>
-                    <span class="text-xs font-bold text-slate-300">Rock</span>
+                <button id="btn-rock" onclick="makeChoice('rock')" class="choice-btn flex flex-col items-center justify-center py-4 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-2xl shadow-lg">
+                    <span class="text-3xl mb-1 pointer-events-none">🪨</span>
+                    <span class="text-xs font-bold text-slate-300 pointer-events-none">Rock</span>
                 </button>
-                <button onclick="makeChoice('paper')" class="choice-btn flex flex-col items-center justify-center py-4 bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-indigo-500 rounded-2xl shadow-lg">
-                    <span class="text-3xl mb-1">📄</span>
-                    <span class="text-xs font-bold text-slate-300">Paper</span>
+                <button id="btn-paper" onclick="makeChoice('paper')" class="choice-btn flex flex-col items-center justify-center py-4 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-2xl shadow-lg">
+                    <span class="text-3xl mb-1 pointer-events-none">📄</span>
+                    <span class="text-xs font-bold text-slate-300 pointer-events-none">Paper</span>
                 </button>
-                <button onclick="makeChoice('scissors')" class="choice-btn flex flex-col items-center justify-center py-4 bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-indigo-500 rounded-2xl shadow-lg">
-                    <span class="text-3xl mb-1">✂️</span>
-                    <span class="text-xs font-bold text-slate-300">Scissors</span>
+                <button id="btn-scissors" onclick="makeChoice('scissors')" class="choice-btn flex flex-col items-center justify-center py-4 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-2xl shadow-lg">
+                    <span class="text-3xl mb-1 pointer-events-none">✂️</span>
+                    <span class="text-xs font-bold text-slate-300 pointer-events-none">Scissors</span>
                 </button>
             </div>
         </section>
@@ -366,20 +375,13 @@
             switchView('view-lobby');
         }
 
-        function resetToLobby() {
-            if (unsubscribeRoom) unsubscribeRoom();
-            currentRoomCode = null;
-            isHost = false;
-            switchView('view-lobby');
-        }
-
-        function listenToRoom(code) {
-            if (unsubscribeRoom) unsubscribeRoom();
-
-            unsubscribeRoom = db.collection('rooms').doc(code).onSnapshot((doc) => {
-                if (!doc.exists) return;
-                const data = doc.data();
-                updateUIState(data);
+        function clearChoiceHighlights() {
+            ['btn-rock', 'btn-paper', 'btn-scissors'].forEach(id => {
+                const btn = document.getElementById(id);
+                if (btn) {
+                    btn.classList.remove('selected-choice');
+                    btn.blur(); // Remove browser element focus highlight on mobile/touch screens
+                }
             });
         }
 
@@ -387,6 +389,13 @@
             if (!currentRoomCode) return;
             const roomRef = db.collection('rooms').doc(currentRoomCode);
             const role = isHost ? 'host' : 'guest';
+
+            // Visually highlight selection locally immediately
+            clearChoiceHighlights();
+            const selectedBtn = document.getElementById(`btn-${choice}`);
+            if (selectedBtn) {
+                selectedBtn.classList.add('selected-choice');
+            }
 
             try {
                 await db.runTransaction(async (transaction) => {
@@ -514,9 +523,15 @@
                 if (myChoice) {
                     myDisplay.innerText = EMOJIS[myChoice];
                     myDisplay.classList.add('border-indigo-500', 'bg-indigo-950/50');
+                    
+                    // Highlight selected button
+                    clearChoiceHighlights();
+                    const btn = document.getElementById(`btn-${myChoice}`);
+                    if (btn) btn.classList.add('selected-choice');
                 } else {
                     myDisplay.innerText = '❓';
                     myDisplay.classList.remove('border-indigo-500', 'bg-indigo-950/50');
+                    clearChoiceHighlights(); // Clear highlights when choices reset for next round
                 }
 
                 if (data.choices.host && data.choices.guest) {
